@@ -1,48 +1,67 @@
-import { Check } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "sonner";
 
-const registrationTypes = [
-  {
-    title: "Early Bird",
-    price: "€350",
-    deadline: "Until July 31",
-    features: [
-      "Full conference access",
-      "Conference proceedings",
-      "Welcome reception",
-      "Coffee breaks & lunches",
-      "Conference dinner",
-    ],
-    highlight: true,
-  },
-  {
-    title: "Regular",
-    price: "€450",
-    deadline: "August 1 - October 1",
-    features: [
-      "Full conference access",
-      "Conference proceedings",
-      "Welcome reception",
-      "Coffee breaks & lunches",
-      "Conference dinner",
-    ],
-    highlight: false,
-  },
-  {
-    title: "Student",
-    price: "€200",
-    deadline: "Valid student ID required",
-    features: [
-      "Full conference access",
-      "Conference proceedings",
-      "Welcome reception",
-      "Coffee breaks & lunches",
-    ],
-    highlight: false,
-  },
-];
+const registrationSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: "Name is required" })
+    .max(100, { message: "Name must be less than 100 characters" }),
+  email: z
+    .string()
+    .trim()
+    .email({ message: "Please enter a valid email address" })
+    .max(255, { message: "Email must be less than 255 characters" }),
+  institution: z
+    .string()
+    .trim()
+    .min(1, { message: "Institution/Organization/University is required" })
+    .max(200, { message: "Institution must be less than 200 characters" }),
+});
+
+type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
 export const RegistrationSection = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<RegistrationFormValues>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      institution: "",
+    },
+  });
+
+  const onSubmit = async (data: RegistrationFormValues) => {
+    setIsSubmitting(true);
+    
+    // Simulate form submission
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    console.log("Registration submitted:", data);
+    toast.success("Registration submitted successfully!", {
+      description: "We will contact you with further details.",
+    });
+    
+    form.reset();
+    setIsSubmitting(false);
+  };
+
   return (
     <section id="registration" className="py-24 bg-background">
       <div className="container mx-auto px-6">
@@ -51,76 +70,92 @@ export const RegistrationSection = () => {
             Registration
           </p>
           <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Secure Your Spot
+            Register for the Conference
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Register early to take advantage of our early bird pricing. 
-            All registrations include access to all sessions and conference materials.
+            Complete the form below to register for E-Vote-ID 2025. 
+            We will send you confirmation and further details via email.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {registrationTypes.map((type) => (
-            <div
-              key={type.title}
-              className={`rounded-2xl p-8 relative ${
-                type.highlight
-                  ? "bg-primary text-primary-foreground ring-2 ring-accent"
-                  : "bg-card border border-border"
-              }`}
-            >
-              {type.highlight && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                  Best Value
-                </span>
-              )}
+        <div className="max-w-xl">
+          <div className="bg-card border border-border rounded-2xl p-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground">Full Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your full name"
+                          className="bg-background border-border"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <h3 className={`font-display text-xl font-semibold mb-2 ${
-                type.highlight ? "text-primary-foreground" : "text-foreground"
-              }`}>
-                {type.title}
-              </h3>
-              
-              <div className="mb-4">
-                <span className={`text-4xl font-bold ${
-                  type.highlight ? "text-primary-foreground" : "text-foreground"
-                }`}>
-                  {type.price}
-                </span>
-              </div>
-              
-              <p className={`text-sm mb-6 ${
-                type.highlight ? "text-primary-foreground/80" : "text-muted-foreground"
-              }`}>
-                {type.deadline}
-              </p>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground">Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Enter your email address"
+                          className="bg-background border-border"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <ul className="space-y-3 mb-8">
-                {type.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2">
-                    <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                      type.highlight ? "text-accent" : "text-accent"
-                    }`} />
-                    <span className={`text-sm ${
-                      type.highlight ? "text-primary-foreground/90" : "text-muted-foreground"
-                    }`}>
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                <FormField
+                  control={form.control}
+                  name="institution"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground">
+                        Institution / Organization / University
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your institution or organization"
+                          className="bg-background border-border"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button
-                className={`w-full ${
-                  type.highlight
-                    ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
-                }`}
-              >
-                Register Now
-              </Button>
-            </div>
-          ))}
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  {isSubmitting ? (
+                    "Submitting..."
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Submit Registration
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </div>
         </div>
       </div>
     </section>
